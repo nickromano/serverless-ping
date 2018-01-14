@@ -1,0 +1,2 @@
+requests==2.18.4
+raven==6.4.0

@@ -1,0 +1,58 @@
+service: serverless-ping
+provider:
+  name: aws
+  runtime: python3.6
+  memorySize: 128
+  environment:
+    SERVICE_STAGE: ${self:service}-${opt:stage, self:provider.stage}
+    PING_METRIC_NAME: ${self:provider.environment.SERVICE_STAGE}
+    PING_ALARM_NAMESPACE: ${opt:ping-alarm-namespace, 'Serverless/Ping'}
+    PING_NAME: ${opt:ping-name}
+    PING_HOST: ${opt:ping-host}
+    PING_ALARM_EMAIL: ${opt:ping-alarm-email}
+    SENTRY_DSN: ${opt:ping-sentry-dsn}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cloudwatch:PutMetricData
+      Resource: "*"
+functions:
+  ping:
+    handler: handler.ping
+    events:
+      - schedule: rate(1 minute)
+resources:
+  Resources:
+    SNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:provider.environment.SERVICE_STAGE}
+    SNSSubscription:
+      Type: AWS::SNS::Subscription
+      DependsOn: SNSTopic
+      Properties:
+        Protocol: email
+        Endpoint: ${self:provider.environment.PING_ALARM_EMAIL}
+        TopicArn:
+          Ref: SNSTopic
+    PingAlarm:
+      Type: AWS::CloudWatch::Alarm
+      DependsOn: SNSSubscription
+      Properties:
+        AlarmName: ${self:provider.environment.PING_NAME}-alarm
+        Namespace: ${self:provider.environment.PING_ALARM_NAMESPACE}
+        MetricName: ${self:provider.environment.PING_METRIC_NAME}
+        Dimensions:
+          - Name: Host
+            Value: ${self:provider.environment.PING_HOST}
+        Statistic: Minimum
+        Period: 60
+        EvaluationPeriods: 1
+        Threshold: 0
+        ComparisonOperator: LessThanOrEqualToThreshold
+        AlarmActions:
+          - Ref: SNSTopic
+        InsufficientDataActions:
+          - Ref: SNSTopic
+        OKActions:
+          - Ref: SNSTopic
