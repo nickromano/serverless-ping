@@ -12,7 +12,6 @@ sys.path.append(os.path.join(here, "vendored"))
 import requests  # noqa
 from raven.contrib.awslambda import LambdaClient  # noqa
 
-boto_client = boto3.client('cloudwatch')
 raven_client = LambdaClient()
 
 logger = logging.getLogger()
@@ -29,6 +28,8 @@ def response_with_message(message):
 
 
 def publish_elapsed_time_for_host(elapsed_time, host):
+    boto_client = boto3.client('cloudwatch')
+
     boto_client.put_metric_data(
         Namespace=os.environ.get('PING_ALARM_NAMESPACE'),
         MetricData=[
