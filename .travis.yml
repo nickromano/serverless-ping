@@ -1,0 +1,17 @@
+language: python
+cache:
+  pip: true
+python:
+  - 3.6
+install:
+  - pip install boto3  # Available in lambda environment
+  - pip install mock
+  - pip install flake8
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install coveralls
+before_script:
+  - flake8 .
+script: pytest --cov=handler
+after_success:
+  - coveralls
