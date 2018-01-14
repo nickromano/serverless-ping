@@ -19,6 +19,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+def current_time_in_seconds():
+    return time.time()
+
+
 def response_with_message(message):
     logger.info(message)
     return {"statusCode": 200, "body": json.dumps({"message": message})}
@@ -47,7 +51,7 @@ def publish_elapsed_time_for_host(elapsed_time, host):
 def ping(event, context):
     ping_host = os.environ.get('PING_HOST')
 
-    start = time.time()
+    start = current_time_in_seconds()
     try:
         response = requests.get(ping_host)
         response.raise_for_status()
@@ -55,11 +59,7 @@ def ping(event, context):
         publish_elapsed_time_for_host(0, ping_host)
         return response_with_message("Checked failed for {}, {}".format(ping_host, str(e)))
 
-    elapsed_time = time.time() - start
+    elapsed_time = current_time_in_seconds() - start
     publish_elapsed_time_for_host(elapsed_time, ping_host)
 
     return response_with_message("Pinged: {} Duration: {}".format(ping_host, elapsed_time))
-
-
-if __name__ == '__main__':
-    ping({}, {})
