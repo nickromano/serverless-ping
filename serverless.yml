@@ -1,4 +1,4 @@
-service: serverless-ping
+service: serverless-ping-${opt:ping-name}
 provider:
   name: aws
   runtime: python3.6
