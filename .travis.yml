@@ -1,0 +1,13 @@
+language: python
+cache:
+  pip: true
+python:
+  - 3.6
+install:
+  - pip install mock==2.0.0
+  - pip install flake8
+before_script:
+  - flake8 .
+script: pytest
+# after_success:
+#   - coveralls
