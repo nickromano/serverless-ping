@@ -10,10 +10,11 @@ class MockResponseSuccess():
 
 
 @mock.patch('handler.requests.get')
+@mock.patch('handler.boto3.client', return_value=mock.Mock())
 @mock.patch('handler.boto_client.put_metric_data')
 @mock.patch('handler.current_time_in_seconds')
 @mock.patch('handler.os.environ.get')
-def test_ping_successful(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_requests_get):
+def test_ping_successful(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_boto_client, mock_requests_get):
     mock_requests_get.return_value = MockResponseSuccess()
     mock_current_time_in_seconds.side_effect = [500, 1000]
     mock_environ_get.side_effect = ['https://google.com', 'MyNamespace', 'google']
@@ -48,10 +49,11 @@ class MockResponseFailure():
 
 
 @mock.patch('handler.requests.get')
+@mock.patch('handler.boto3.client', return_value=mock.Mock())
 @mock.patch('handler.boto_client.put_metric_data')
 @mock.patch('handler.current_time_in_seconds')
 @mock.patch('handler.os.environ.get')
-def test_ping_failure(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_requests_get):
+def test_ping_failure(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_boto_client, mock_requests_get):
     mock_requests_get.return_value = MockResponseFailure()
     mock_current_time_in_seconds.side_effect = [500, 1000]
     mock_environ_get.side_effect = ['https://google.com', 'MyNamespace', 'google']
