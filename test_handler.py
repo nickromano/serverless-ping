@@ -9,19 +9,28 @@ class MockResponseSuccess():
         return
 
 
+class MockBotoClient():
+    def __init__(self):
+        self.calls = []
+
+    def put_metric_data(self, *args, **kwargs):
+        self.calls.append(mock.call(*args, **kwargs))
+
+
 @mock.patch('handler.requests.get')
-@mock.patch('handler.boto3.client', return_value=mock.Mock())
-@mock.patch('handler.boto_client.put_metric_data')
+@mock.patch('handler.boto3.client')
 @mock.patch('handler.current_time_in_seconds')
 @mock.patch('handler.os.environ.get')
-def test_ping_successful(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_boto_client, mock_requests_get):
+def test_ping_successful(mock_environ_get, mock_current_time_in_seconds, mock_boto_client, mock_requests_get):
     mock_requests_get.return_value = MockResponseSuccess()
+    mock_boto_client_instance = MockBotoClient()
+    mock_boto_client.return_value = mock_boto_client_instance
     mock_current_time_in_seconds.side_effect = [500, 1000]
     mock_environ_get.side_effect = ['https://google.com', 'MyNamespace', 'google']
 
     result = ping({}, {})
 
-    assert mock_boto_put_metric.call_args_list == [mock.call(
+    assert mock_boto_client_instance.calls == [mock.call(
         MetricData=[{
             'MetricName': 'google',
             'Dimensions': [
@@ -50,17 +59,18 @@ class MockResponseFailure():
 
 @mock.patch('handler.requests.get')
 @mock.patch('handler.boto3.client', return_value=mock.Mock())
-@mock.patch('handler.boto_client.put_metric_data')
 @mock.patch('handler.current_time_in_seconds')
 @mock.patch('handler.os.environ.get')
-def test_ping_failure(mock_environ_get, mock_current_time_in_seconds, mock_boto_put_metric, mock_boto_client, mock_requests_get):
+def test_ping_failure(mock_environ_get, mock_current_time_in_seconds, mock_boto_client, mock_requests_get):
     mock_requests_get.return_value = MockResponseFailure()
+    mock_boto_client_instance = MockBotoClient()
+    mock_boto_client.return_value = mock_boto_client_instance
     mock_current_time_in_seconds.side_effect = [500, 1000]
     mock_environ_get.side_effect = ['https://google.com', 'MyNamespace', 'google']
 
     result = ping({}, {})
 
-    assert mock_boto_put_metric.call_args_list == [mock.call(
+    assert mock_boto_client_instance.calls == [mock.call(
         MetricData=[{
             'MetricName': 'google',
             'Dimensions': [
