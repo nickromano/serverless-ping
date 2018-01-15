@@ -17,6 +17,8 @@ raven_client = LambdaClient()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+boto_client = None
+
 
 def current_time_in_seconds():
     return time.time()
@@ -28,7 +30,9 @@ def response_with_message(message):
 
 
 def publish_elapsed_time_for_host(elapsed_time, host):
-    boto_client = boto3.client('cloudwatch')
+    global boto_client
+    if not boto_client:
+        boto_client = boto3.client('cloudwatch')
 
     boto_client.put_metric_data(
         Namespace=os.environ.get('PING_ALARM_NAMESPACE'),
