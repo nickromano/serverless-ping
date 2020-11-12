@@ -1,2 +1,2 @@
-requests==2.21.0
+requests==2.25.0
 raven==6.10.0
